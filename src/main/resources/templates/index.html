@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Todo List</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        body { font-family: system-ui, Arial, sans-serif; margin: 24px; }
+        h1 { margin-bottom: 12px; }
+        form { display: flex; gap: 8px; margin-bottom: 16px; }
+        input[type="text"] { flex: 1; padding: 8px; }
+        button { padding: 8px 12px; cursor: pointer; }
+        ul { list-style: none; padding: 0; }
+        li { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #eee; }
+        .empty { color: #777; }
+        .right { display: flex; gap: 6px; }
+    </style>
+</head>
+<body>
+<h1>Todo List</h1>
+
+<form id="add-form">
+    <input id="content-input" type="text" placeholder="할 일을 입력하세요" required />
+    <button type="submit">추가</button>
+</form>
+
+<ul id="todo-list"></ul>
+<p id="empty-text" class="empty" style="display:none;">할 일이 없습니다.</p>
+
+<script>
+    const $list = document.getElementById('todo-list');
+    const $empty = document.getElementById('empty-text');
+    const $form = document.getElementById('add-form');
+    const $input = document.getElementById('content-input');
+
+    async function fetchTodos() {
+        const res = await fetch('/api/todos');
+        if (!res.ok) { alert('목록을 불러오지 못했습니다.'); return; }
+        renderList(await res.json());
+    }
+
+    function renderList(items) {
+        $list.innerHTML = '';
+        if (!items || items.length === 0) { $empty.style.display = 'block'; return; }
+        $empty.style.display = 'none';
+        for (const item of items) {
+            const li = document.createElement('li');
+            const left = document.createElement('span');
+            left.textContent = `${item.id}. ${item.content}`;
+
+            const right = document.createElement('span');
+            right.className = 'right';
+
+            const delBtn = document.createElement('button');
+            delBtn.textContent = '삭제';
+            delBtn.onclick = () => deleteTodo(item.id);
+
+            right.appendChild(delBtn);
+            li.appendChild(left);
+            li.appendChild(right);
+            $list.appendChild(li);
+        }
+    }
+
+    async function addTodo(content) {
+        const res = await fetch('/api/todo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content })
+        });
+        if (res.status === 201) { $input.value=''; fetchTodos(); }
+        else { alert('추가 실패'); }
+    }
+
+    async function deleteTodo(id) {
+        if (!confirm('삭제하시겠습니까?')) return;
+        const res = await fetch(`/api/todo/${id}`, { method: 'DELETE' });
+        if (res.status === 204) fetchTodos(); else alert('삭제 실패');
+    }
+
+    $form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const content = $input.value.trim();
+        if (!content) return;
+        addTodo(content);
+    });
+
+    fetchTodos();
+</script>
+</body>
+</html>
