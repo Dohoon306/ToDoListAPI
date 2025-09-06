@@ -3,9 +3,8 @@ package com.example.todolist.dto;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-
 @NoArgsConstructor
 @Getter
-public class UpdateTodoContent {
-    private String content;
+public class UpdateTodoDone {
+    private boolean done;
 }

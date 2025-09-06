@@ -3,6 +3,7 @@ package com.example.todolist.controller;
 import com.example.todolist.dto.AddTodoContent;
 import com.example.todolist.dto.TodoResponse;
 import com.example.todolist.dto.UpdateTodoContent;
+import com.example.todolist.dto.UpdateTodoDone;
 import com.example.todolist.entity.Todo;
 import com.example.todolist.service.TodoService;
 import lombok.RequiredArgsConstructor;
@@ -49,18 +50,27 @@ public class TodoApiController {
     }
 
     @DeleteMapping("/api/todo/{id}")
-    public ResponseEntity<Void> deleteById(@PathVariable long id){
-        todoService.deleteById(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<TodoResponse> deleteById(@PathVariable long id){
+        Todo savedTodo=todoService.deleteById(id);
+        return ResponseEntity.ok().body(new TodoResponse(savedTodo));
     }
 
-    @PatchMapping("/api/todo/{id}")
-    public ResponseEntity<Void> updateById(
+    @PatchMapping("/api/todo/{id}/content")
+    public ResponseEntity<TodoResponse> updateContentById(
             @PathVariable Long id,
             @RequestBody UpdateTodoContent updateTodoContent)
     {
-        todoService.updateById(id,updateTodoContent);
-        return ResponseEntity.noContent().build();
+        Todo savedTodo = todoService.updateContentById(id,updateTodoContent);
+        return ResponseEntity.ok().body(new TodoResponse(savedTodo));
+    }
+
+    @PatchMapping("/api/todo/{id}/done")
+    public ResponseEntity<TodoResponse> updateDoneById(
+            @PathVariable Long id,
+            @RequestBody UpdateTodoDone updateTodoDone
+    ){
+        Todo todoResponse=todoService.updateDoneById(id,updateTodoDone);
+        return ResponseEntity.ok().body(new TodoResponse(todoResponse));
     }
 
 }

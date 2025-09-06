@@ -27,14 +27,12 @@ public class Todo {
         this.done=false;
     }
 
-    @Builder
-    public Todo(Long id, String content){
-        this.id=id;
+    public void updateContent(String content){
         this.content=content;
     }
 
-    public void updateContent(String content){
-        this.content=content;
+    public void updateDone(boolean done){
+        this.done=done;
     }
 
 }

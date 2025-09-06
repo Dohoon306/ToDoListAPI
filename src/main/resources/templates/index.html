@@ -20,6 +20,9 @@
         .cancel-btn { background-color: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
         .save-btn:hover { background-color: #218838; }
         .cancel-btn:hover { background-color: #c82333; }
+        .todo-item { display: flex; align-items: center; gap: 8px; }
+        .todo-checkbox { margin-right: 8px; }
+        .todo-content.completed { text-decoration: line-through; color: #666; }
     </style>
 </head>
 <body>
@@ -53,8 +56,17 @@
             const li = document.createElement('li');
             li.id = `todo-${item.id}`;
             
+            const todoItem = document.createElement('div');
+            todoItem.className = 'todo-item';
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'todo-checkbox';
+            checkbox.checked = item.done;
+            checkbox.onchange = () => toggleDone(item.id, checkbox.checked);
+            
             const left = document.createElement('span');
-            left.className = 'todo-content';
+            left.className = `todo-content ${item.done ? 'completed' : ''}`;
             left.textContent = `${item.id}. ${item.content}`;
 
             const right = document.createElement('span');
@@ -70,7 +82,10 @@
 
             right.appendChild(editBtn);
             right.appendChild(delBtn);
-            li.appendChild(left);
+            
+            todoItem.appendChild(checkbox);
+            todoItem.appendChild(left);
+            li.appendChild(todoItem);
             li.appendChild(right);
             $list.appendChild(li);
         }
@@ -117,13 +132,13 @@
         }
         
         try {
-            const res = await fetch(`/api/todo/${id}`, {
+            const res = await fetch(`/api/todo/${id}/content`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ content: newContent })
             });
             
-            if (res.status === 204) {
+            if (res.status === 200) {
                 // 수정 성공 시 목록 새로고침
                 fetchTodos();
             } else {
@@ -146,10 +161,41 @@
         li.removeChild(editForm);
     }
 
+    async function toggleDone(id, done) {
+        try {
+            const res = await fetch(`/api/todo/${id}/done`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ done })
+            });
+            
+            if (res.status === 200) {
+                // 체크박스 상태 업데이트
+                const li = document.getElementById(`todo-${id}`);
+                const contentSpan = li.querySelector('.todo-content');
+                if (done) {
+                    contentSpan.classList.add('completed');
+                } else {
+                    contentSpan.classList.remove('completed');
+                }
+            } else {
+                alert('상태 변경에 실패했습니다.');
+                // 체크박스 상태 되돌리기
+                const checkbox = document.querySelector(`#todo-${id} .todo-checkbox`);
+                checkbox.checked = !done;
+            }
+        } catch (error) {
+            alert('상태 변경 중 오류가 발생했습니다.');
+            // 체크박스 상태 되돌리기
+            const checkbox = document.querySelector(`#todo-${id} .todo-checkbox`);
+            checkbox.checked = !done;
+        }
+    }
+
     async function deleteTodo(id) {
         if (!confirm('삭제하시겠습니까?')) return;
         const res = await fetch(`/api/todo/${id}`, { method: 'DELETE' });
-        if (res.status === 204) fetchTodos(); else alert('삭제 실패');
+        if (res.status === 200) fetchTodos(); else alert('삭제 실패');
     }
 
     $form.addEventListener('submit', (e) => {
