@@ -14,6 +14,12 @@
         li { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #eee; }
         .empty { color: #777; }
         .right { display: flex; gap: 6px; }
+        .edit-form { display: flex; gap: 6px; align-items: center; flex: 1; }
+        .edit-input { flex: 1; padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px; }
+        .save-btn { background-color: #28a745; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
+        .cancel-btn { background-color: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
+        .save-btn:hover { background-color: #218838; }
+        .cancel-btn:hover { background-color: #c82333; }
     </style>
 </head>
 <body>
@@ -45,16 +51,24 @@
         $empty.style.display = 'none';
         for (const item of items) {
             const li = document.createElement('li');
+            li.id = `todo-${item.id}`;
+            
             const left = document.createElement('span');
+            left.className = 'todo-content';
             left.textContent = `${item.id}. ${item.content}`;
 
             const right = document.createElement('span');
             right.className = 'right';
 
+            const editBtn = document.createElement('button');
+            editBtn.textContent = '수정';
+            editBtn.onclick = () => startEdit(item.id, item.content);
+
             const delBtn = document.createElement('button');
             delBtn.textContent = '삭제';
             delBtn.onclick = () => deleteTodo(item.id);
 
+            right.appendChild(editBtn);
             right.appendChild(delBtn);
             li.appendChild(left);
             li.appendChild(right);
@@ -70,6 +84,66 @@
         });
         if (res.status === 201) { $input.value=''; fetchTodos(); }
         else { alert('추가 실패'); }
+    }
+
+    function startEdit(id, currentContent) {
+        const li = document.getElementById(`todo-${id}`);
+        const contentSpan = li.querySelector('.todo-content');
+        const rightSpan = li.querySelector('.right');
+        
+        // 수정 모드로 변경
+        const editForm = document.createElement('div');
+        editForm.className = 'edit-form';
+        editForm.innerHTML = `
+            <input type="text" value="${currentContent}" class="edit-input" />
+            <button onclick="saveEdit(${id})" class="save-btn">저장</button>
+            <button onclick="cancelEdit(${id}, '${currentContent}')" class="cancel-btn">취소</button>
+        `;
+        
+        // 기존 내용 숨기고 수정 폼 표시
+        contentSpan.style.display = 'none';
+        rightSpan.style.display = 'none';
+        li.appendChild(editForm);
+    }
+
+    async function saveEdit(id) {
+        const li = document.getElementById(`todo-${id}`);
+        const input = li.querySelector('.edit-input');
+        const newContent = input.value.trim();
+        
+        if (!newContent) {
+            alert('내용을 입력해주세요.');
+            return;
+        }
+        
+        try {
+            const res = await fetch(`/api/todo/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: newContent })
+            });
+            
+            if (res.status === 204) {
+                // 수정 성공 시 목록 새로고침
+                fetchTodos();
+            } else {
+                alert('수정에 실패했습니다.');
+            }
+        } catch (error) {
+            alert('수정 중 오류가 발생했습니다.');
+        }
+    }
+
+    function cancelEdit(id, originalContent) {
+        const li = document.getElementById(`todo-${id}`);
+        const contentSpan = li.querySelector('.todo-content');
+        const rightSpan = li.querySelector('.right');
+        const editForm = li.querySelector('.edit-form');
+        
+        // 원래 상태로 복원
+        contentSpan.style.display = 'block';
+        rightSpan.style.display = 'block';
+        li.removeChild(editForm);
     }
 
     async function deleteTodo(id) {

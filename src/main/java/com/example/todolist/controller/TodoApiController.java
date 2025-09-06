@@ -2,6 +2,7 @@ package com.example.todolist.controller;
 
 import com.example.todolist.dto.AddTodoContent;
 import com.example.todolist.dto.TodoResponse;
+import com.example.todolist.dto.UpdateTodoContent;
 import com.example.todolist.entity.Todo;
 import com.example.todolist.service.TodoService;
 import lombok.RequiredArgsConstructor;
@@ -53,6 +54,13 @@ public class TodoApiController {
         return ResponseEntity.noContent().build();
     }
 
-
+    @PatchMapping("/api/todo/{id}")
+    public ResponseEntity<Void> updateById(
+            @PathVariable Long id,
+            @RequestBody UpdateTodoContent updateTodoContent)
+    {
+        todoService.updateById(id,updateTodoContent);
+        return ResponseEntity.noContent().build();
+    }
 
 }

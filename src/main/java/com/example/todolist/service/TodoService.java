@@ -1,9 +1,11 @@
 package com.example.todolist.service;
 
 import com.example.todolist.dto.AddTodoContent;
+import com.example.todolist.dto.UpdateTodoContent;
 import com.example.todolist.entity.Todo;
 import com.example.todolist.repository.TodoRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -32,4 +34,14 @@ public class TodoService {
     public void deleteById(long id){
         todoRepository.deleteById(id);
     }
+
+    @Transactional
+    public void updateById(long id, UpdateTodoContent updateTodoContent){
+        Todo todo = todoRepository.findById(id)
+                .orElseThrow(()->new IllegalArgumentException("not found: "+id));
+
+        todo.updateContent(updateTodoContent.getContent());
+    }
+
+
 }
